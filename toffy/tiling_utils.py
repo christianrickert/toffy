@@ -741,7 +741,7 @@ def generate_tiled_region_fov_list(tiling_params, moly_path: Optional[str] = Non
         # a Moly point at the end of a region this way
         total_fovs += len(row_col_pairs)
 
-        for index, (row_i, col_i) in enumerate(row_col_pairs):
+        for index, (col_i, row_i) in enumerate(row_col_pairs):
             # use the fov size to scale to the current row- and col-coordinate
             cur_row = start_row - (row_i * region_info['row_fov_size'])
             cur_col = start_col + (col_i * region_info['col_fov_size'])
@@ -756,8 +756,8 @@ def generate_tiled_region_fov_list(tiling_params, moly_path: Optional[str] = Non
 
             # copy the fov metadata over and add cur_x, cur_y, and name
             fov = copy.deepcopy(tiling_params['fovs'][region_index])
-            fov['centerPointMicrons']['x'] = cur_row
-            fov['centerPointMicrons']['y'] = cur_col
+            fov['centerPointMicrons']['x'] = cur_col
+            fov['centerPointMicrons']['y'] = cur_row
             fov['name'] = fov_names[index]
 
             # append value to fov_regions
