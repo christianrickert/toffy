@@ -232,33 +232,33 @@ def combine_run_metrics(run_dir, substring):
     metrics.to_csv(os.path.join(run_dir, substring + '_combined.csv'), index=False)
 
 
-def combine_tuning_curve_metrics(dir_list, count_range):
+def combine_tuning_curve_metrics(dir_list, mph_limits):
     """Combines metrics together into a single dataframe for fitting a turning curve
 
     Args:
         dir_list (list): list of directories to pull metrics from
-        count_range (tuple): range of appropriate mass count values for the FOVs
+        mph_limits (tuple): limit mph range for tuning curve fitting
 
     Returns:
         pd.DataFrame: dataframe containing aggregates metrics"""
 
     # create list to hold all extracted data
-    all_dirs, excluded_fovs = [], []
+    all_dirs = []
     # loop through each run folder
     for dir in dir_list:
         pulse_heights = pd.read_csv(os.path.join(dir, 'fov-1-scan-1_pulse_heights.csv'))
         channel_counts = pd.read_csv(os.path.join(dir, 'fov-1-scan-1_channel_counts.csv'))
 
-        # check for extreme count values
-        extreme_val = False
-        if count_range:
-            counts = channel_counts.channel_count
-            if any(counts <= count_range[0]) or any(counts >= count_range[1]):
-                extreme_val = True
-                excluded_fovs.append(os.path.basename(dir))
-        # do not add extreme value fovs to the combined data frame
-        if extreme_val:
-            continue
+#        # check for extreme count values
+#        extreme_val = False
+#        if count_range:
+#            counts = channel_counts.channel_count
+#            if any(counts <= count_range[0]) or any(counts >= count_range[1]):
+#                extreme_val = True
+#                excluded_fovs.append(os.path.basename(dir))
+#        # do not add extreme value fovs to the combined data frame
+#        if extreme_val:
+#            continue
 
         # combine tables together
         combined = pulse_heights.merge(channel_counts, 'outer', on=['fov', 'mass'])
@@ -271,26 +271,42 @@ def combine_tuning_curve_metrics(dir_list, count_range):
         combined['directory'] = dir
         all_dirs.append(combined)
 
-    if len(excluded_fovs) > 0:
-        excluded_fovs = ns.natsorted(excluded_fovs)
-        print("The counts for the FOV contained in the following folders are outside of "
-              "the expected range and will be excluded: ", *excluded_fovs, sep='\n- ')
-    elif count_range:
-        print("No extreme values detected.")
+#    if len(excluded_fovs) > 0:
+#        excluded_fovs = ns.natsorted(excluded_fovs)
+#        print("The counts for the FOV contained in the following folders are outside of "
+#              "the expected range and will be excluded: ", *excluded_fovs, sep='\n- ')
+#    elif count_range:
+#        print("No extreme values detected.")
 
     # combine data from each dir together
     all_data = pd.concat(all_dirs)
     all_data.reset_index()
+
+    # restrict data range with mph limits
+    limited_data = all_data(all_data['pulse_height'].values >= mph_limits[0] &
+                        all_data['pulse_height'].values <= mph_limits[1])
+
+    # enfor
+    assert mph_limits[0] >= 0, \
+        "Median pulse height (MPH) minimum must be equal to or greater than zero"
+    assert mph_limits[1] > mph_limits[0], \
+        "Median pulse height (MPH) range must be greater than zero"
+    if mph_limits[0] < 3_000:
+        print("Median pulse height (MPH) minimum is smaller than 3,000:\n"
+              "Please confirm that the maximum signal values are monotonically increasing")
+    if mph_limits[1] > 10_000:
+        print("Median pulse height (MPH) maximum is bigger than 10,000:\n"
+              "Please confirm that the fitted curve is continuosly increasing in value")
 
     # check for sufficient data
     if len(set(all_data.directory)) < 4:
         raise ValueError("Invalid amount of FOV data. Please choose another sweep.")
 
     # create normalized counts column
-    subset = all_data[['channel_count', 'mass']]
-    all_data['norm_channel_count'] = subset.groupby('mass').transform(lambda x: (x / x.max()))
+    subset = limited_data[['channel_count', 'mass']]
+    limited_data['norm_channel_count'] = subset.groupby('mass').transform(lambda x: (x / x.max()))
 
-    return all_data
+    return limited_data
 
 
 def plot_voltage_vs_counts(sweep_fov_paths, combined_data, save_path):
@@ -350,14 +366,14 @@ def show_multiple_plots(rows, cols, image_paths, image_size=(17, 12)):
 
 def create_tuning_function(sweep_path, moly_masses=[92, 94, 95, 96, 97, 98, 100],
                            save_path=os.path.join('..', 'toffy', 'norm_func.json'),
-                           count_range=(0, 3000000)):
+                           mph_limits=(0, float('inf'))):
     """Creates a tuning curve for an instrument based on the provided moly sweep
 
     Args:
         sweep_path (str): path to folder containing a detector sweep
         moly_masses (list): list of masses to use for fitting the curve
         save_path (str): path to save the weights of the tuning curve
-        count_range (tuple): range of appropriate mass count values for the FOVs
+        mph_limits (tuple): restrict mph range for tuning curve fitting
     """
 
     # get all folders from the sweep
@@ -381,12 +397,12 @@ def create_tuning_function(sweep_path, moly_masses=[92, 94, 95, 96, 97, 98, 100]
             write_counts_per_mass(base_dir=fov_path, output_dir=fov_path, fov='fov-1-scan-1',
                                   masses=moly_masses)
 
-    if count_range:
+    if mph_limits:
         # combine all data together into single df for comparison
-        all_data = combine_tuning_curve_metrics(sweep_fov_paths, count_range=None)
+        all_data = combine_tuning_curve_metrics(sweep_fov_paths, mph_limits=None)
 
         # generate curve with extreme values included
-        all_coeffs = fit_calibration_curve(all_data['pulse_height'].values,
+        _ = fit_calibration_curve(all_data['pulse_height'].values,
                                            all_data['norm_channel_count'].values, 'exp',
                                            plot_fit=True,
                                            save_path=os.path.join(
@@ -403,13 +419,13 @@ def create_tuning_function(sweep_path, moly_masses=[92, 94, 95, 96, 97, 98, 100]
                                    os.path.join(sweep_path, 'voltage_vs_counts.jpg')])
 
     # combine tuning date into single df, if count_range given then extreme values excluded
-    tuning_data = combine_tuning_curve_metrics(sweep_fov_paths, count_range=count_range)
+    tuning_data = combine_tuning_curve_metrics(sweep_fov_paths, mph_limits=mph_limits)
 
     # generate fitted curve
     tuning_coeffs = fit_calibration_curve(tuning_data['pulse_height'].values,
                                           tuning_data['norm_channel_count'].values, 'exp',
                                           plot_fit=True,
-                                          save_path=os.path.join(sweep_path, 'function_fit.jpg'),
+                                          save_path=os.path.join(sweep_path, 'function_fit_limited_data.jpg'),
                                           x_label='Median Pulse Height',
                                           y_label='Normalized Channel Counts',
                                           title='Tuning Curve', show_plot=True)
