@@ -283,20 +283,21 @@ def combine_tuning_curve_metrics(dir_list, mph_limits):
     all_data.reset_index()
 
     # restrict data range with mph limits
-    limited_data = all_data(all_data['pulse_height'].values >= mph_limits[0] &
-                        all_data['pulse_height'].values <= mph_limits[1])
-
-    # enfor
-    assert mph_limits[0] >= 0, \
-        "Median pulse height (MPH) minimum must be equal to or greater than zero"
-    assert mph_limits[1] > mph_limits[0], \
-        "Median pulse height (MPH) range must be greater than zero"
-    if mph_limits[0] < 3_000:
-        print("Median pulse height (MPH) minimum is smaller than 3,000:\n"
-              "Please confirm that the maximum signal values are monotonically increasing")
-    if mph_limits[1] > 10_000:
-        print("Median pulse height (MPH) maximum is bigger than 10,000:\n"
-              "Please confirm that the fitted curve is continuosly increasing in value")
+    if mph_limits:
+        assert mph_limits[0] >= 0, \
+            "Median pulse height (MPH) minimum must be equal to or greater than zero"
+        assert mph_limits[1] > mph_limits[0], \
+            "Median pulse height (MPH) range must be greater than zero"
+        if mph_limits[0] < 3_000:
+            print("Median pulse height (MPH) minimum is smaller than 3,000:\n"
+                  "Please confirm that the maximum signal values are monotonically increasing")
+        if mph_limits[1] > 10_000:
+            print("Median pulse height (MPH) maximum is bigger than 10,000:\n"
+                  "Please confirm that the fitted curve is continuosly increasing in value")
+        limited_data = all_data[(all_data['pulse_height'].values >= mph_limits[0]) &
+                                (all_data['pulse_height'].values <= mph_limits[1])]
+    else:
+        limited_data = all_data
 
     # check for sufficient data
     if len(set(all_data.directory)) < 4:
