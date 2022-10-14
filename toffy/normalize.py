@@ -294,20 +294,20 @@ def combine_tuning_curve_metrics(dir_list, mph_limits):
         if mph_limits[1] > 10_000:
             print("Median pulse height (MPH) maximum is bigger than 10,000:\n"
                   "Please confirm that the fitted curve is continuosly increasing in value")
-        limited_data = all_data[(all_data['pulse_height'].values >= mph_limits[0]) &
+        current_data = all_data[(all_data['pulse_height'].values >= mph_limits[0]) &
                                 (all_data['pulse_height'].values <= mph_limits[1])]
     else:
-        limited_data = all_data
+        current_data = all_data
 
     # check for sufficient data
     if len(set(all_data.directory)) < 4:
         raise ValueError("Invalid amount of FOV data. Please choose another sweep.")
 
     # create normalized counts column
-    subset = limited_data[['channel_count', 'mass']]
-    limited_data['norm_channel_count'] = subset.groupby('mass').transform(lambda x: (x / x.max()))
+    subset = current_data[['channel_count', 'mass']]
+    return_data = current_data.assign(norm_channel_count = subset.groupby('mass').transform(lambda x: (x / x.max())))
 
-    return limited_data
+    return return_data
 
 
 def plot_voltage_vs_counts(sweep_fov_paths, combined_data, save_path):
