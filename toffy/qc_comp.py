@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import pandas as pd
-import tiff
 
 from requests.exceptions import HTTPError
 from scipy.ndimage import gaussian_filter
@@ -12,7 +11,7 @@ from shutil import rmtree
 
 from toffy.mibitracker_utils import MibiTrackerError
 from toffy.mibitracker_utils import MibiRequests
-from toffy import settings
+from toffy import settings, tiff
 
 import ark.utils.io_utils as io_utils
 import ark.utils.misc_utils as misc_utils

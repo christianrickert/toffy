@@ -3,9 +3,8 @@ import math
 import re
 import natsort as ns
 import skimage.io as io
-import tiff
 
-from toffy import json_utils
+from toffy import json_utils, tiff
 from ark.utils import data_utils, load_utils, io_utils, misc_utils
 from mibi_bin_tools.io_utils import remove_file_extensions
 
