@@ -3,11 +3,11 @@ import copy
 import json
 import os
 import shutil
+import tiff
 import warnings
 
 import numpy as np
 from scipy.optimize import curve_fit
-import skimage.io as io
 import matplotlib.pyplot as plt
 import natsort as ns
 import pandas as pd
@@ -670,8 +670,8 @@ def normalize_fov(img_data, norm_vals, norm_dir, fov, channels, extreme_vals):
     normalized_images = img_data / norm_vals.reshape((1, 1, 1, len(norm_vals)))
 
     for idx, chan in enumerate(channels):
-        io.imsave(os.path.join(output_fov_dir, chan + '.tiff'),
-                  normalized_images[0, :, :, idx], check_contrast=False)
+        tiff.write_zlib(os.path.join(output_fov_dir, chan + '.tiff'),
+                        normalized_images[0, :, :, idx])
 
     # save logs
     log_df = pd.DataFrame({'channels': channels,

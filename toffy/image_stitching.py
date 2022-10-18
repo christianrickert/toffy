@@ -3,6 +3,7 @@ import math
 import re
 import natsort as ns
 import skimage.io as io
+import tiff
 
 from toffy import json_utils
 from ark.utils import data_utils, load_utils, io_utils, misc_utils
@@ -100,5 +101,5 @@ def stitch_images(tiff_out_dir, run_dir=None, channels=None, img_sub_folder=None
                                                     max_image_size=max_img_size, dtype='float32')
         stitched = data_utils.stitch_images(image_data, num_cols)
         current_img = stitched.loc['stitched_image', :, :, chan].values
-        io.imsave(os.path.join(stitched_dir, chan + '_stitched.tiff'),
-                  current_img.astype('float32'), check_contrast=False)
+        tiff.write_zlib(os.path.join(stitched_dir, chan + '_stitched.tiff'),
+                        current_img.astype('float32'))
