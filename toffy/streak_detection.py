@@ -1,11 +1,11 @@
 import os
-import tiff
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 from matplotlib.pyplot import connect
+from toffy import tiff
 from typing import Union, Tuple
 from pathlib import Path
 from skimage import (

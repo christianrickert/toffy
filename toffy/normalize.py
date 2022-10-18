@@ -3,7 +3,6 @@ import copy
 import json
 import os
 import shutil
-import tiff
 import warnings
 
 import numpy as np
@@ -20,6 +19,7 @@ from mibi_bin_tools.io_utils import remove_file_extensions
 from mibi_bin_tools.bin_files import extract_bin_files, get_median_pulse_height
 from mibi_bin_tools.panel_utils import make_panel
 
+from toffy import tiff
 from toffy.json_utils import read_json_file, write_json_file
 
 
