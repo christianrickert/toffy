@@ -7,8 +7,8 @@ MIBITRACKER_BACKEND = 'https://backend-dot-mibitracker-angelolab.appspot.com'
 
 # co-registration
 COREG_SAVE_PATH = 'C:\\Users\\Customer.ION\\Documents\\toffy\\toffy\\coreg_params.json'
-FIDUCIAL_POSITIONS = ['top left', 'top right', 'middle left', 'middle right',
-                      'bottom left', 'bottom right']
+FIDUCIAL_POSITIONS = ['top left', 'top right', 'mid-high left', 'mid-high right',
+                      'mid-low left', 'mid-low right']
 
 MICRON_TO_STAGE_X_MULTIPLIER = 0.001001
 MICRON_TO_STAGE_X_OFFSET = 0.3116

@@ -474,15 +474,15 @@ def read_tiled_region_inputs(region_corners, region_params):
 
         # allow the user to specify the number of fovs along each dimension
         num_row = read_tiling_param(
-            "Enter the number of FOVs per row for region %s: " % fov['name'],
-            "Error: number of FOVs per row must be a positive integer",
+            "Enter the number of rows in the grid for region %s: " % fov['name'],
+            "Error: number of rows must be a positive integer",
             lambda nx: nx >= 1,
             dtype=int
         )
 
         num_col = read_tiling_param(
-            "Enter the number of FOVs per column for region %s: " % fov['name'],
-            "Error: number of FOVs per column must be a positive integer",
+            "Enter the number of columns in the grid for region %s: " % fov['name'],
+            "Error: number of columns must be a positive integer",
             lambda ny: ny >= 1,
             dtype=int
         )
